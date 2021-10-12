@@ -52,7 +52,6 @@ namespace Demo.Controllers
                 return BadRequest();
         }
 
-        
         [HttpDelete("{id}")]
         public async Task<ActionResult<ChargeStation>> DeleteChargeStation(int id)
         {

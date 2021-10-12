@@ -53,7 +53,6 @@ namespace Demo.Services.ChargeStationService
             {
                 return null;
             }
-
             return chargeStation;
         }
 
