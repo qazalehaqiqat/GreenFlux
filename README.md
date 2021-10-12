@@ -1,22 +1,30 @@
-Buils the project:
 
+## Build the project:
+
+```
 dontnet build
+
 dotnet run
-##########################
+```
 
-Run the tests:
-
-cd Demo.Test
-dotnet test
-##########################
-
-Swagger address:
+## Swagger
 
 https://localhost:5001/swagger/index.html
 
-##########################
 
-Create migration & database:
+## Run the tests:
 
-dotnet ef migrations add InitialCreat --project demo
+```
+// workdir: ./Demo.Test
+
+dotnet test
+```
+
+
+## Create migration & database:
+
+```
+dotnet ef migrations add InitialCreate --project demo
+
 dotnet ef database update --project demo
+```
