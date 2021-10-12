@@ -1,5 +1,5 @@
 
-## Build the project:
+## Build and run the project:
 
 ```
 dontnet build
