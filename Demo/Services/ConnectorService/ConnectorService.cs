@@ -75,7 +75,7 @@ namespace Demo.Services.ConnectorService
                     throw new Exception("Not found!");
                  }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return null;
             }
