@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="5.0.10">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="5.0.10" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="5.0.10">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.2.2" />
+    <PackageReference Include="FluentValidation.AspNetCore" Version="10.3.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="Models\" />
+    <None Remove="Services\" />
+    <None Remove="Services\ConnectorService\" />
+    <None Remove="Services\ChargeStationService\" />
+    <None Remove="Services\GroupService\" />
+    <None Remove="FluentValidation.AspNetCore" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Models\" />
+    <Folder Include="Services\" />
+    <Folder Include="Services\ConnectorService\" />
+    <Folder Include="Services\ChargeStationService\" />
+    <Folder Include="Services\GroupService\" />
+  </ItemGroup>
+</Project>
