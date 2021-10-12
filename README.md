@@ -3,7 +3,7 @@
 
 ```
 dontnet build
-
+// workdir: ./Demo
 dotnet run
 ```
 
@@ -16,15 +16,14 @@ https://localhost:5001/swagger/index.html
 
 ```
 // workdir: ./Demo.Test
-
 dotnet test
 ```
 
 
-## Create migration & database:
+## Create database:
 
 ```
-dotnet ef migrations add InitialCreate --project demo
+dotnet ef migrations add InitialCreat --project demo
 
 dotnet ef database update --project demo
 ```
