@@ -19,21 +19,19 @@ namespace Demo.Controllers
         }
 
         [HttpGet]
-        public List<Group> Get()
+        public async Task<ActionResult<Group>> GetGroup(int? id)
         {
-            return _groupService.GetAllGroups();
-        }
-
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Group>> GetGroup(int id)
-        {
-            var group = await _groupService.GetGroupById(id);
-
-            if (group == null)
+            if(id != null)
             {
-                return NotFound();
+                var group = await _groupService.GetGroupById(id.Value);
+
+                if (group == null)
+                {
+                    return NotFound();
+                }
+                return group;
             }
-            return group;
+            return Ok(_groupService.GetAllGroups());
         }
 
         [HttpPost]

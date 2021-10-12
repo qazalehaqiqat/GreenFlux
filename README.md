@@ -1,3 +1,10 @@
+# GreenFlux 
+
+GreenFlux a .Net core 5.0 WebApi project for managing smart charging.
+Used Tools:
+* A Database with SQLite;
+* Entity Framework Core
+* xUnit.net
 
 ## Build and run the project:
 

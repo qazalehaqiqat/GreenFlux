@@ -22,10 +22,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Demo\Demo.csproj" />
-  </ItemGroup>
-  <ItemGroup>
     <None Remove="Moq" />
     <None Remove="Microsoft.EntityFrameworkCore.InMemory" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Demo\Demo.csproj" />
   </ItemGroup>
 </Project>

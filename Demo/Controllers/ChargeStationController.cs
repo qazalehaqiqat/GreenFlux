@@ -19,15 +19,17 @@ namespace Demo.Controllers
         }
         
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<ChargeStation>>> GetChargeStation()
+        public async Task<ActionResult<ChargeStation>> GetChargeStation(int? id)
         {
-            return await _chargeStationService.GetAllChargeStations();
-        }
-
-        [HttpGet("{id}")]
-        public async Task<ActionResult<ChargeStation>> GetChargeStation(int id)
-        {
-            return await _chargeStationService.GetChargeStationById(id);
+            if(id != null)
+            {
+                var chargeStation = await _chargeStationService.GetChargeStationById(id.Value);
+                if (chargeStation != null)
+                    return Ok(chargeStation);
+                else NotFound();
+            }
+            
+            return Ok(await _chargeStationService.GetAllChargeStations());
         }
 
         [HttpPut("{id}")]

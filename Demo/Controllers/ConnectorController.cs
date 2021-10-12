@@ -22,22 +22,23 @@ namespace Demo.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetConnector()
+        public async Task<ActionResult<Connector>> GetConnector(int? connectorId, int? chargeStationId)
         {
-            return Ok(await _connectorService.GetAllConnectors());
-        }
-        [HttpGet("{connectorId}/{chargeStationId}")]
-        public async Task<ActionResult<Connector>> GetConnector(int connectorId, int chargeStationId)
-        {
-            var connector = await _connectorService.GetConnectorById(connectorId, chargeStationId);
-
-            if (connector == null)
+           if(connectorId != null && chargeStationId != null)
             {
-                return NotFound();
+                var connector = await _connectorService.GetConnectorById(connectorId.Value, chargeStationId.Value);
+
+                if (connector == null)
+                {
+                    return NotFound();
+                }
+
+                return Ok(connector);
             }
 
-            return Ok(connector);
+            return Ok(await _connectorService.GetAllConnectors());
         }
+
         [HttpPut]
         public async Task<ActionResult<Connector>> PutConnector(Connector connector)
         {

@@ -40,7 +40,7 @@ namespace Demo.Services.ChargeStationService
             return chargeStation;
         }
 
-        public async Task<List<ChargeStation>> GetAllChargeStations()
+        public async Task<IEnumerable<ChargeStation>> GetAllChargeStations()
         {
             return await _context.ChargeStation.Include(c => c.Connectors).ToListAsync();
         }
