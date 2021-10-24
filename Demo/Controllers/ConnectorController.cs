@@ -1,12 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+﻿using System.Collections.Generic;
 using Demo.Models;
 using Demo.Services.ConnectorService;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Demo.Controllers
 {
@@ -22,50 +17,55 @@ namespace Demo.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<Connector>> GetConnector(int? connectorId, int? chargeStationId)
+        public IAsyncEnumerable<Connector> GetConnector()
         {
-           if(connectorId != null && chargeStationId != null)
-            {
-                var connector = await _connectorService.GetConnectorById(connectorId.Value, chargeStationId.Value);
+            return _connectorService.GetAllConnectors();
+        }
 
-                if (connector == null)
-                {
-                    return NotFound();
-                }
+        [HttpGet("GetConnectorById/{connectorId}/{chargeStationId}")]
+        public ActionResult<Connector> GetConnectorById(int connectorId, int chargeStationId)
+        {
+            var connector = _connectorService.GetConnectorById(connectorId, chargeStationId);
 
-                return Ok(connector);
-            }
+            if (connector == null) return NotFound();
+            return connector;
+        }
 
-            return Ok(await _connectorService.GetAllConnectors());
+        [HttpGet("GetConnectorsOfChargeStation/{chargeStationId}")]
+        public ActionResult<List<Connector>> GetConnectorsOfChargeStation(int chargeStationId)
+        {
+            var connectors = _connectorService.GetConnectorsOfChargeStation(chargeStationId);
+            if (connectors == null) return NotFound();
+            return connectors;
         }
 
         [HttpPut]
-        public async Task<ActionResult<Connector>> PutConnector(Connector connector)
+        public IActionResult PutConnector(Connector connector)
         {
-            var conn = await _connectorService.UpdateCurrent(connector.ConnectorId, connector.ChargeStationId, connector.MaxCurrent);
-            if (!conn.Succeeded) return BadRequest(conn.Message);
-            return CreatedAtAction("GetConnector", new { id = conn.Data.ConnectorId }, conn);
+            var conn = _connectorService.UpdateCurrent(connector.ConnectorId, connector.ChargeStationId,
+                connector.MaxCurrent);
+            if (conn.Result.StatusCode == 400)
+                return BadRequest(conn.Result.Message);
+            if (conn.Result.StatusCode == 404)
+                return NotFound(conn.Result.Message);
+            return CreatedAtAction("GetConnector", new { id = conn.Result.Data.ConnectorId }, conn);
         }
 
         [HttpPost]
-        public async Task<ActionResult<Connector>> PostConnector(int chargeStationId,Connector connector)
+        public IActionResult PostConnector(int chargeStationId, Connector connector)
         {
-            var conn = await _connectorService.AddConnectorToChargeStation(chargeStationId, connector);
-            if (conn.Data == null)
-                return BadRequest();
-            else
-                return CreatedAtAction("GetConnector", new { id = conn.Data.ConnectorId }, conn.Data);
+            var conn = _connectorService.AddConnectorToChargeStation(chargeStationId, connector);
+            if (conn.Result.Data == null)
+                return BadRequest(conn.Result.Message);
+            return CreatedAtAction("GetConnector", new { id = conn.Result.Data.ConnectorId }, conn.Result.Data);
         }
+
         [HttpDelete]
-        public async Task<ActionResult<Connector>> DeleteConnector(int connectorId, int chargeStationId)
+        public IActionResult DeleteConnector(int connectorId, int chargeStationId)
         {
-            var conn = await _connectorService.DeleteConnector(connectorId, chargeStationId);
-            if (conn == null)
-            {
-                return BadRequest();
-            }
-            return conn;
+            var conn = _connectorService.DeleteConnector(connectorId, chargeStationId);
+            if (conn.Result == null) return BadRequest();
+            return Ok(conn.Result);
         }
     }
 }
-

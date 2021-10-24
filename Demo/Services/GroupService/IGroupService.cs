@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using Demo.Models;
-using Microsoft.AspNetCore.Mvc;
 
 namespace Demo.Services.GroupService
 {

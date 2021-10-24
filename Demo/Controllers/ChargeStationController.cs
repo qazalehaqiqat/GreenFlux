@@ -1,9 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
 using Demo.Models;
 using Demo.Services.ChargeStationService;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Demo.Controllers
 {
@@ -17,29 +16,30 @@ namespace Demo.Controllers
         {
             _chargeStationService = chargeStationService;
         }
-        
+
         [HttpGet]
-        public async Task<ActionResult<ChargeStation>> GetChargeStation(int? id)
+        public Task<IEnumerable<ChargeStation>> GetAllChargeStations()
         {
-            if(id != null)
-            {
-                var chargeStation = await _chargeStationService.GetChargeStationById(id.Value);
-                if (chargeStation != null)
-                    return Ok(chargeStation);
-                else NotFound();
-            }
-            
-            return Ok(await _chargeStationService.GetAllChargeStations());
+            return _chargeStationService.GetAllChargeStations();
+        }
+
+        [HttpGet("GetChargeStationById/{id}")]
+        public ActionResult<ChargeStation> GetChargeStationById(int id)
+        {
+            var chargeStation = _chargeStationService.GetChargeStationById(id);
+            if (chargeStation != null)
+                return chargeStation;
+            return NotFound();
         }
 
         [HttpPut("{id}")]
         public async Task<ActionResult<ChargeStation>> PutChargeStation(int id, ChargeStation chargeStation)
         {
             var updatedChargeRequest = await _chargeStationService.UpdateChargeStation(id, chargeStation);
-            if(updatedChargeRequest != null)
-            return CreatedAtAction("GetChargeStation", new { id = updatedChargeRequest.ChargeStationId }, updatedChargeRequest);
-            else
-                return BadRequest();
+            if (updatedChargeRequest != null)
+                return CreatedAtAction("GetChargeStation", new { id = updatedChargeRequest.ChargeStationId },
+                    updatedChargeRequest);
+            return BadRequest();
         }
 
         [HttpPost]
@@ -47,9 +47,9 @@ namespace Demo.Controllers
         {
             var createdChargeStation = await _chargeStationService.AddChargeStationToGroup(groupId, chargeStation);
             if (createdChargeStation != null)
-                return CreatedAtAction("GetChargeStation", new { id = createdChargeStation.ChargeStationId }, createdChargeStation);
-            else
-                return BadRequest();
+                return CreatedAtAction("GetChargeStation", new { id = createdChargeStation.ChargeStationId },
+                    createdChargeStation);
+            return BadRequest();
         }
 
         [HttpDelete("{id}")]
@@ -57,9 +57,8 @@ namespace Demo.Controllers
         {
             var deletedChargeStation = await _chargeStationService.DeleteChargeStation(id);
             if (deletedChargeStation != null)
-                return CreatedAtAction("GetChargeStation", new { id = deletedChargeStation.ChargeStationId }, deletedChargeStation);
-            else
-                return BadRequest();
+                return Ok(deletedChargeStation);
+            return BadRequest();
         }
     }
 }

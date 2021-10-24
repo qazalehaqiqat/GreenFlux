@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Demo.Models;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace Demo.Services.ConnectorService
@@ -11,6 +10,7 @@ namespace Demo.Services.ConnectorService
     public class ConnectorService : IConnectorService
     {
         private readonly DemoContext _context;
+
         public ConnectorService(DemoContext context)
         {
             _context = context;
@@ -23,25 +23,23 @@ namespace Demo.Services.ConnectorService
                 var groupId = _context.ChargeStation.Find(chargeStationId).GroupId;
                 var groupCapacity = _context.Group.Find(groupId).Capacity;
 
-                var chargeStation = _context.ChargeStation.Include(c => c.Connectors).FirstOrDefault(c => c.ChargeStationId == chargeStationId);
+                var chargeStation = _context.ChargeStation.Include(c => c.Connectors)
+                    .FirstOrDefault(c => c.ChargeStationId == chargeStationId);
                 if (!chargeStation.Connectors.Any(c => c.ConnectorId == connector.ConnectorId))
                 {
-                    Connector c = _context.Connector.FirstOrDefault(c => c.ConnectorId == connector.ConnectorId && c.ChargeStationId == chargeStationId);
+                    var c = _context.Connector.FirstOrDefault(c =>
+                        c.ConnectorId == connector.ConnectorId && c.ChargeStationId == chargeStationId);
 
                     if (c != null)
                     {
-                        if ((UsedCapacityGroup(groupId) + c.MaxCurrent) > groupCapacity)
-                        {
+                        if (UsedCapacityGroup(groupId) + c.MaxCurrent > groupCapacity)
                             throw new Exception("You can't add connector because group capacity is not enough.");
-                        }
                         chargeStation.Connectors.Add(c);
                     }
                     else
                     {
-                        if ((UsedCapacityGroup(groupId) + connector.MaxCurrent) > groupCapacity)
-                        {
+                        if (UsedCapacityGroup(groupId) + connector.MaxCurrent > groupCapacity)
                             throw new Exception("You can't add connector because group capacity is not enough.");
-                        }
                         _context.Connector.Add(connector);
                         chargeStation.Connectors.Add(connector);
                     }
@@ -50,18 +48,25 @@ namespace Demo.Services.ConnectorService
                 {
                     throw new Exception("You've already added this connector. Please try again!");
                 }
+
                 await _context.SaveChangesAsync();
-                return new APIResponse<Connector> { Data = connector, Succeeded = true, Message = "Connector just added to charge station sucessfully." };
+                return new APIResponse<Connector>
+                {
+                    Data = connector, StatusCode = 200, Message = "Connector just added to charge station sucessfully."
+                };
             }
             catch (Exception ex)
             {
-                return new APIResponse<Connector> { Data = null, Succeeded = false, Message = ex.Message };
+                if (ex.Message == "You can't add connector because group capacity is not enough.")
+                    return new APIResponse<Connector> { Data = null, StatusCode = 400, Message = ex.Message };
+                return new APIResponse<Connector> { Data = null, StatusCode = 500, Message = ex.Message };
             }
         }
 
         public async Task<Connector> DeleteConnector(int connectorId, int chargeStationId)
         {
-            var connector = await _context.Connector.FirstOrDefaultAsync(c => c.ConnectorId == connectorId && c.ChargeStationId == chargeStationId);
+            var connector = await _context.Connector.FirstOrDefaultAsync(c =>
+                c.ConnectorId == connectorId && c.ChargeStationId == chargeStationId);
 
             try
             {
@@ -73,7 +78,7 @@ namespace Demo.Services.ConnectorService
                 else
                 {
                     throw new Exception("Not found!");
-                 }
+                }
             }
             catch (Exception)
             {
@@ -83,54 +88,61 @@ namespace Demo.Services.ConnectorService
             return connector;
         }
 
-        public async Task<IEnumerable<Connector>> GetAllConnectors()
+        public IAsyncEnumerable<Connector> GetAllConnectors()
         {
-            return await _context.Connector.ToListAsync();
+            return _context.Connector;
         }
 
-        public async Task<Connector> GetConnectorById(int connectorId, int chargeStationId)
+        public Connector GetConnectorById(int connectorId, int chargeStationId)
         {
-            var connector = await _context.Connector.FirstOrDefaultAsync(p => p.ConnectorId == connectorId && p.ChargeStationId == chargeStationId);
+            var connector = _context.Connector.FirstOrDefault(p =>
+                p.ConnectorId == connectorId && p.ChargeStationId == chargeStationId);
 
             return connector;
+        }
+
+        public List<Connector> GetConnectorsOfChargeStation(int chargeStationId)
+        {
+            return _context.Connector.Where(c => c.ChargeStationId == chargeStationId).ToList();
         }
 
         public async Task<APIResponse<Connector>> UpdateCurrent(int connectorId, int chargeStationId, double maxCurrent)
         {
             try
             {
-                var connector = await _context.Connector.FirstOrDefaultAsync(c => c.ConnectorId == connectorId && c.ChargeStationId == chargeStationId);
-                if (connector == null)
-                {
-                    throw new Exception("Not Found");
-                }
-                else
-                {
-                    var current = connector.MaxCurrent;
+                var connector = await _context.Connector.FirstOrDefaultAsync(c =>
+                    c.ConnectorId == connectorId && c.ChargeStationId == chargeStationId);
+                if (connector == null) throw new Exception("Not Found");
 
-                    var groupId = _context.ChargeStation.Find(chargeStationId).GroupId;
-                    var groupCapacity = _context.Group.Find(groupId).Capacity;
+                var current = connector.MaxCurrent;
 
-                    if ((UsedCapacityGroup(groupId) - current) + maxCurrent > groupCapacity)
-                    {
-                        throw new Exception("You can't update connector's max current because group capacity is not enough.");
-                    }
+                var groupId = _context.ChargeStation.Find(chargeStationId).GroupId;
+                var groupCapacity = _context.Group.Find(groupId).Capacity;
 
-                    var station = _context.ChargeStation.Where(c => c.Connectors.Any(s => s.ConnectorId == connectorId && s.ChargeStationId == chargeStationId)).ToList().GroupBy(c => c.GroupId);
-                    connector.MaxCurrent = maxCurrent;
-                    await _context.SaveChangesAsync();
-                    return new APIResponse<Connector> {Data =  connector, Succeeded=true} ;
-                }
+                if (UsedCapacityGroup(groupId) - current + maxCurrent > groupCapacity)
+                    throw new Exception(
+                        "You can't update connector's max current because group capacity is not enough.");
+
+                var station = _context.ChargeStation
+                    .Where(c => c.Connectors.Any(s =>
+                        s.ConnectorId == connectorId && s.ChargeStationId == chargeStationId)).ToList()
+                    .GroupBy(c => c.GroupId);
+                connector.MaxCurrent = maxCurrent;
+                await _context.SaveChangesAsync();
+                return new APIResponse<Connector> { Data = connector, StatusCode = 200 };
             }
             catch (Exception ex)
             {
-                return new APIResponse<Connector> { Data = null, Message = ex.Message, Succeeded = false };
+                if (ex.Message == "Not Found")
+                    return new APIResponse<Connector> { Data = null, Message = ex.Message, StatusCode = 404 };
+                return new APIResponse<Connector> { Data = null, Message = ex.Message, StatusCode = 400 };
             }
         }
 
         private double UsedCapacityGroup(int groupId)
         {
-            return _context.ChargeStation.Where(c => c.GroupId == groupId).Include(c => c.Connectors).SelectMany(c => c.Connectors).Sum(c => c.MaxCurrent);
+            return _context.ChargeStation.Where(c => c.GroupId == groupId).Include(c => c.Connectors)
+                .SelectMany(c => c.Connectors).Sum(c => c.MaxCurrent);
         }
     }
 }

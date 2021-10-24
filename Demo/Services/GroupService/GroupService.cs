@@ -4,15 +4,15 @@ using System.Linq;
 using System.Threading.Tasks;
 using Demo.Models;
 using Demo.Services.ChargeStationService;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace Demo.Services.GroupService
 {
     public class GroupService : IGroupService
     {
-        private readonly DemoContext _context;
         private readonly IChargeStationService _chargeStationService;
+        private readonly DemoContext _context;
+
         public GroupService(DemoContext context, IChargeStationService chargeStationService)
         {
             _context = context;
@@ -31,23 +31,18 @@ namespace Demo.Services.GroupService
             try
             {
                 var group = await _context.Group.Include(c => c.ChargeStations).FirstOrDefaultAsync(c => c.Id == id);
-                if (group == null)
-                {
-                    throw new Exception("Not Found");
-                }
+                if (group == null) throw new Exception("Not Found");
                 foreach (var station in group.ChargeStations)
-                {
                     await _chargeStationService.DeleteChargeStation(station.ChargeStationId);
-                }
-                _context.Group.Remove(@group);
+                _context.Group.Remove(group);
                 await _context.SaveChangesAsync();
-                return new APIResponse<Group> { Data = group, Succeeded = true, Message = "Group deleted successfully", StatusCode = 200 };
+                return new APIResponse<Group>
+                    { Data = group, Message = "Group deleted successfully", StatusCode = 200 };
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
-                return new APIResponse<Group> { Data = null, Succeeded = false, Message = ex.Message, StatusCode = 400 };
+                return new APIResponse<Group> { Data = null, Message = ex.Message, StatusCode = 400 };
             }
-            
         }
 
         public List<Group> GetAllGroups()
@@ -57,7 +52,7 @@ namespace Demo.Services.GroupService
 
         public async Task<Group> GetGroupById(int id)
         {
-            var group =  await _context.Group.Include(c => c.ChargeStations).FirstOrDefaultAsync(c => c.Id == id);
+            var group = await _context.Group.Include(c => c.ChargeStations).FirstOrDefaultAsync(c => c.Id == id);
             return group;
         }
 
@@ -65,17 +60,15 @@ namespace Demo.Services.GroupService
         {
             try
             {
-                if (groupId != group.Id)
-            {
-                    throw new Exception("Not Found");
-            }
+                if (groupId != group.Id) throw new Exception("Not Found");
                 _context.Entry(group).State = EntityState.Modified;
                 await _context.SaveChangesAsync();
-                return new APIResponse<Group> { Data = group, Message = "Group updated successfully.", Succeeded = true };
+                return new APIResponse<Group>
+                    { Data = group, Message = "Group updated successfully.", StatusCode = 200 };
             }
             catch (Exception ex)
             {
-                return new APIResponse<Group> { Data = null, Message = ex.Message, Succeeded = false, StatusCode = 400 };
+                return new APIResponse<Group> { Data = null, Message = ex.Message, StatusCode = 400 };
             }
         }
     }

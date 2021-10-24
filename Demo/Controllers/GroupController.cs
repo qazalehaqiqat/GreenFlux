@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using Demo.Models;
 using Demo.Services.GroupService;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace Demo.Controllers
 {
@@ -13,25 +10,25 @@ namespace Demo.Controllers
     public class GroupController : Controller
     {
         private readonly IGroupService _groupService;
+
         public GroupController(IGroupService groupService)
         {
             _groupService = groupService;
         }
 
         [HttpGet]
-        public async Task<ActionResult<Group>> GetGroup(int? id)
+        public List<Group> GetGroup()
         {
-            if(id != null)
-            {
-                var group = await _groupService.GetGroupById(id.Value);
+            return _groupService.GetAllGroups();
+        }
 
-                if (group == null)
-                {
-                    return NotFound();
-                }
-                return group;
-            }
-            return Ok(_groupService.GetAllGroups());
+        [HttpGet("GetGroupById/{id}")]
+        public async Task<ActionResult<Group>> GetGroupById(int id)
+        {
+            var group = await _groupService.GetGroupById(id);
+
+            if (group == null) return NotFound();
+            return group;
         }
 
         [HttpPost]
@@ -42,13 +39,14 @@ namespace Demo.Controllers
         }
 
         [HttpDelete("{id}")]
-        public async Task<ActionResult<Group>> DeleteGroup(int id)
+        public ActionResult<Group> DeleteGroup(int id)
         {
-            var group = await _groupService.DeleteGroup(id);
+            var group = _groupService.DeleteGroup(id);
             if (group == null) return NotFound();
-            return CreatedAtAction("GetGroup", group);
+            return Ok(group);
         }
-        [HttpPut("{id}")]
+
+        [HttpPut]
         public async Task<ActionResult<Group>> PutGroup(int id, Group group)
         {
             var updattetdGroup = await _groupService.UpdateGroup(id, group);
@@ -58,4 +56,3 @@ namespace Demo.Controllers
         }
     }
 }
-

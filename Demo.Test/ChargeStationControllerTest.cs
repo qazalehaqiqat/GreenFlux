@@ -1,21 +1,23 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Demo.Controllers;
 using Demo.Models;
 using Demo.Services.ChargeStationService;
-using Demo.Controllers;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Moq;
 using Xunit;
-using Microsoft.AspNetCore.Mvc;
 
 namespace Demo.Test
 {
     public class ChargeStationControllerTest
     {
-        public readonly Mock<IChargeStationService> chargeStationServiceStub = new Mock<IChargeStationService>();
+        public readonly Mock<IChargeStationService> chargeStationServiceStub = new();
+
         public ChargeStationControllerTest()
         {
-            var builder = new DbContextOptionsBuilder<DemoContext>().EnableSensitiveDataLogging().UseInMemoryDatabase(Guid.NewGuid().ToString());
+            var builder = new DbContextOptionsBuilder<DemoContext>().EnableSensitiveDataLogging()
+                .UseInMemoryDatabase(Guid.NewGuid().ToString());
             using (var context = new DemoContext(builder.Options))
             {
                 context.Group.Add(new Group
@@ -43,11 +45,13 @@ namespace Demo.Test
                 Name = "chs1",
                 GroupId = 2
             };
-            chargeStationServiceStub.Setup(p => p.AddChargeStationToGroup(2, chargeStation)).ReturnsAsync((ChargeStation)null);
+            chargeStationServiceStub.Setup(p => p.AddChargeStationToGroup(2, chargeStation))
+                .ReturnsAsync((ChargeStation)null);
             var controller = new ChargeStationController(chargeStationServiceStub.Object);
             var createdChargeStation = await controller.PostChargeStation(2, chargeStation);
             Assert.IsType<BadRequestResult>(createdChargeStation.Result);
         }
+
         [Fact]
         public async Task AddChargeStation_WhenNotExistInGroup_ShouldReturnAddedChargeStation()
         {
@@ -57,11 +61,13 @@ namespace Demo.Test
                 Name = "ChargeStation2",
                 GroupId = 2
             };
-            chargeStationServiceStub.Setup(p => p.AddChargeStationToGroup(2, chargeStation)).ReturnsAsync(chargeStation);
+            chargeStationServiceStub.Setup(p => p.AddChargeStationToGroup(2, chargeStation))
+                .ReturnsAsync(chargeStation);
             var controller = new ChargeStationController(chargeStationServiceStub.Object);
             var createdChargeStation = await controller.PostChargeStation(2, chargeStation);
             Assert.IsType<CreatedAtActionResult>(createdChargeStation.Result);
         }
+
         [Fact]
         public async Task UpdateChargeStation_WhenExistInGroup_ShouldReturnUpdatedChargeStation()
         {
@@ -75,8 +81,8 @@ namespace Demo.Test
             var controller = new ChargeStationController(chargeStationServiceStub.Object);
             var createdChargeStation = await controller.PutChargeStation(2, chargeStation);
             Assert.IsType<CreatedAtActionResult>(createdChargeStation.Result);
-
         }
+
         [Fact]
         public async Task DeletehargeStation_WhenNotExist_ShouldReturnBadRequest()
         {
@@ -84,16 +90,16 @@ namespace Demo.Test
             var controller = new ChargeStationController(chargeStationServiceStub.Object);
             var deletedChargeStation = await controller.DeleteChargeStation(4);
             Assert.IsType<BadRequestResult>(deletedChargeStation.Result);
-
         }
+
         [Fact]
         public async Task DeletehargeStation_WhenExist_ShouldReturnDeletedChargeStation()
         {
-            chargeStationServiceStub.Setup(p => p.DeleteChargeStation(1)).ReturnsAsync(new ChargeStation { ChargeStationId = 1});
+            chargeStationServiceStub.Setup(p => p.DeleteChargeStation(1))
+                .ReturnsAsync(new ChargeStation { ChargeStationId = 1 });
             var controller = new ChargeStationController(chargeStationServiceStub.Object);
             var deletedChargeStation = await controller.DeleteChargeStation(1);
             Assert.IsType<CreatedAtActionResult>(deletedChargeStation.Result);
-
         }
     }
 }
