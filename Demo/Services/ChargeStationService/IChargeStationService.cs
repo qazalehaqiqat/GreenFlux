@@ -10,6 +10,6 @@ namespace Demo.Services.ChargeStationService
         public Task<IEnumerable<ChargeStation>> GetAllChargeStations();
         public Task<ChargeStation> AddChargeStationToGroup(int groupId, ChargeStation chargeStation);
         public Task<APIResponse<ChargeStation>> UpdateChargeStation(ChargeStation chargeStation);
-        public Task<ChargeStation> DeleteChargeStation(int id);
+        public Task<APIResponse<ChargeStation>> DeleteChargeStation(int id);
     }
 }

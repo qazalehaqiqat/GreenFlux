@@ -56,9 +56,9 @@ namespace Demo.Controllers
         public async Task<ActionResult<ChargeStation>> DeleteChargeStation(int id)
         {
             var deletedChargeStation = await _chargeStationService.DeleteChargeStation(id);
-            if (deletedChargeStation != null)
-                return Ok(deletedChargeStation);
-            return BadRequest();
+            if (deletedChargeStation.StatusCode == 200)
+                return deletedChargeStation.Data;
+            return BadRequest(deletedChargeStation.Message);
         }
     }
 }

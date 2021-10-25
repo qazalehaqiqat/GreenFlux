@@ -29,15 +29,23 @@ namespace Demo.Services.ChargeStationService
             return null;
         }
 
-        public async Task<ChargeStation> DeleteChargeStation(int id)
+        public async Task<APIResponse<ChargeStation>> DeleteChargeStation(int id)
         {
-            var chargeStation = await _context.ChargeStation.FindAsync(id);
-            if (chargeStation == null) return null;
+            try
+            {
+                var chargeStation = await _context.ChargeStation.FindAsync(id);
+                if (chargeStation == null) return null;
 
-            _context.ChargeStation.Remove(chargeStation);
-            await _context.SaveChangesAsync();
+                _context.ChargeStation.Remove(chargeStation);
+                await _context.SaveChangesAsync();
 
-            return chargeStation;
+                return new APIResponse<ChargeStation> { Data = chargeStation, StatusCode = 200, Message = "ChargeStation deleted successfully."};
+            }
+            catch(Exception ex)
+            {
+                return new APIResponse<ChargeStation> { Data = null, StatusCode = 500, Message = ex.Message };
+            }
+            
         }
 
         public async Task<IEnumerable<ChargeStation>> GetAllChargeStations()
