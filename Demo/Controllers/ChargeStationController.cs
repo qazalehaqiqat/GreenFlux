@@ -32,14 +32,14 @@ namespace Demo.Controllers
             return NotFound();
         }
 
-        [HttpPut("{id}")]
-        public async Task<ActionResult<ChargeStation>> PutChargeStation(int id, ChargeStation chargeStation)
+        [HttpPut]
+        public async Task<ActionResult<ChargeStation>> PutChargeStation(ChargeStation chargeStation)
         {
-            var updatedChargeRequest = await _chargeStationService.UpdateChargeStation(id, chargeStation);
-            if (updatedChargeRequest != null)
-                return CreatedAtAction("GetChargeStation", new { id = updatedChargeRequest.ChargeStationId },
-                    updatedChargeRequest);
-            return BadRequest();
+            var updatedChargeRequest = await _chargeStationService.UpdateChargeStation(chargeStation);
+            if (updatedChargeRequest.StatusCode == 200)
+                return CreatedAtAction("GetChargeStation", new { id = updatedChargeRequest.Data.ChargeStationId },
+                    updatedChargeRequest.Data);
+            return BadRequest(updatedChargeRequest.Message);
         }
 
         [HttpPost]

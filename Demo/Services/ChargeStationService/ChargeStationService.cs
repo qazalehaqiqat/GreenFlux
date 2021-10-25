@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Demo.Models;
@@ -53,27 +54,36 @@ namespace Demo.Services.ChargeStationService
             return chargeStation;
         }
 
-        public async Task<ChargeStation> UpdateChargeStation(int id, ChargeStation chargeStation)
+        public async Task<APIResponse<ChargeStation>> UpdateChargeStation(ChargeStation chargeStation)
         {
-            if (id != chargeStation.ChargeStationId) return null;
-            if (chargeStation.Connectors != null)
-            {
-                var current = _context.ChargeStation.FindAsync(id).Result.Connectors.Sum(c => c.MaxCurrent);
-            }
+            var sumCurrentUpdatedConnectors = chargeStation.Connectors.Sum(c => c.MaxCurrent);
+            if (!_context.ChargeStation.Any(c => c.ChargeStationId == chargeStation.ChargeStationId))
+                return new APIResponse<ChargeStation>
+                    { Data = null, StatusCode = 404, Message = "ChargeStation not found!" };
 
-            UsedCapacityGroup(chargeStation.GroupId);
-            _context.Entry(chargeStation).State = EntityState.Modified;
-
+            var used = UsedCapacityGroup(chargeStation.GroupId);
+            var cap = _context.Group.Find(chargeStation.GroupId).Capacity;
+            if (used + sumCurrentUpdatedConnectors > cap)
+                return new APIResponse<ChargeStation>
+                {
+                    Data = null, StatusCode = 400,
+                    Message = "You can't update chargeStation because group capacity is not enough."
+                };
             try
             {
+                _context.Entry(chargeStation).State = EntityState.Modified;
+                foreach (var conn in _context.Connector.Where(c => c.ChargeStationId == chargeStation.ChargeStationId))
+                    _context.Connector.Remove(conn);
+                _context.SaveChanges();
+
+                foreach (var conn in chargeStation.Connectors) _context.Connector.Add(conn);
                 await _context.SaveChangesAsync();
-                return chargeStation;
+                return new APIResponse<ChargeStation>
+                    { Data = chargeStation, StatusCode = 200, Message = "ChargeStation updated successfully" };
             }
-            catch (DbUpdateConcurrencyException)
+            catch (Exception ex)
             {
-                if (!_context.ChargeStation.Any(c => c.ChargeStationId == id))
-                    return null;
-                throw;
+                return new APIResponse<ChargeStation> { Data = null, StatusCode = 500, Message = ex.Message };
             }
         }
 
